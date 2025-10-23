@@ -13,8 +13,10 @@ services:
       - "8080:8080"
     volumes:
       - type: bind
-        source: "${APPDATA}\\Postman\\Partitions"
+        source: "$HOME/Library/Application Support/Postman/Partitions"
         target: /home/app/.config/Postman/Partitions
         read_only: true  # descomente se quiser evitar alteracoes no host
+      
+    # windows: substitua a origem por '${APPDATA}\\Postman\\Partitions'
     # macOS: substitua a origem por '$HOME/Library/Application Support/Postman/Partitions'
     # Linux: substitua por '$HOME/.config/Postman/Partitions'
