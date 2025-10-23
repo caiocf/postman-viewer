@@ -1,10 +1,11 @@
 # docker-compose.yml
 services:
   postman-viewer:
-    platform: linux/amd64
+    #platform: ${POSTMAN_PLATFORM:-linux/amd64}
     #build:
     #  context: .
-    image: caiocf/postman-viewer:9.31.30_1
+    #  dockerfile: ${POSTMAN_DOCKERFILE:-Dockerfile.amd64}  # use Dockerfile.arm64 para hosts ARM
+    image: caiocf/postman-viewer:9.31.30_amd64
     container_name: postman-viewer
     restart: unless-stopped
     environment:

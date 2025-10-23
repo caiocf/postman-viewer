@@ -17,10 +17,17 @@ Requisitos
 Estrutura do projeto
 --------------------
 
-- `Dockerfile`: instala dependências gráficas, bibliotecas adicionais (libdrm, mesa, dbus-x11), baixa o Postman 9.31.30 e prepara o usuário `app`.
+- `Dockerfile.amd64`: instala dependências gráficas, bibliotecas adicionais (libdrm, mesa, dbus-x11), baixa o Postman 9.31.30 (pacote `linux64`) e prepara o usuário `app` para hosts x86_64.
+- `Dockerfile.arm64`: equivalente para hosts ARM64, baixando o pacote `linux-arm64` (por padrão a versão `latest`, que exige login no Postman 10+).
 - `start.sh`: sobe Xvfb, inicia um daemon DBus de sessão, VNC/noVNC e lança o Postman apontando para `~/.config/Postman/Partitions`.
 - O script já liga o Postman com flags `--disable-gpu --disable-dev-shm-usage --no-sandbox --disable-setuid-sandbox --disable-gpu-sandbox --disable-software-rasterizer --disable-features=VizDisplayCompositor --use-gl=swiftshader --in-process-gpu`; personalize via variável `POSTMAN_FLAGS` se necessário.
 - `docker-compose.yaml`: define o serviço, mapeia portas/volume e ajusta resolução do display virtual.
+
+Arquiteturas suportadas
+-----------------------
+
+- **x86_64 (amd64):** utilize o `Dockerfile.amd64`, que preserva a versão 9.31.30 (sem login obrigatório) baixando o pacote `linux64`.
+- **ARM64 (aarch64/Apple Silicon):** utilize o `Dockerfile.arm64`, que baixa o pacote `linux-arm64`. A Postman mantém apenas versões 10+ para ARM, portanto será necessário autenticar-se ao abrir o aplicativo.
 
 Como subir localmente
 ---------------------
@@ -33,7 +40,7 @@ Como subir localmente
        target: /home/app/.config/Postman/Partitions
    ```
 2. (Opcional) Ajuste a variável `RESOLUTION` para aumentar a área útil do Postman, por exemplo `1920x1080x24`.
-3. Construa e suba o container:
+3. Construa e suba o container (em hosts ARM64 exporte `POSTMAN_DOCKERFILE=Dockerfile.arm64` e `POSTMAN_PLATFORM=linux/arm64` antes do comando):
    ```powershell
    docker compose up --build -d
    ```
@@ -50,18 +57,31 @@ Publicação no Docker Hub
    ```powershell
    docker login -u caiocf
    ```
-2. Construa a imagem nomeando com seu namespace:
+2. Construa e publique a variante **amd64**:
    ```powershell
-   docker build -t caiocf/postman-viewer:9.31.30 .
+   docker build -f Dockerfile.amd64 -t caiocf/postman-viewer:9.31.30-amd64 .
+   docker push caiocf/postman-viewer:9.31.30-amd64
+   docker tag  caiocf/postman-viewer:9.31.30-amd64 caiocf/postman-viewer:latest-amd64
+   docker push caiocf/postman-viewer:latest-amd64
    ```
-3. Opcional: crie uma tag `latest` se fizer sentido.
+3. Construa e publique a variante **arm64** (execute em um host ARM ou habilite `buildx` com emulação QEMU):
    ```powershell
-   docker tag caiocf/postman-viewer:9.31.30 caiocf/postman-viewer:latest
+   docker build -f Dockerfile.arm64 -t caiocf/postman-viewer:9.31.30-arm64 .
+   docker push caiocf/postman-viewer:9.31.30-arm64
+   docker tag  caiocf/postman-viewer:9.31.30-arm64 caiocf/postman-viewer:latest-arm64
+   docker push caiocf/postman-viewer:latest-arm64
    ```
-4. Envie as tags desejadas:
+4. (Opcional) Gere um manifest multi-arquitetura para facilitar o `docker pull` automático:
    ```powershell
-   docker push caiocf/postman-viewer:9.31.30
-   docker push caiocf/postman-viewer:latest
+   docker manifest create caiocf/postman-viewer:9.31.30 `
+     --amend caiocf/postman-viewer:9.31.30-amd64 `
+     --amend caiocf/postman-viewer:9.31.30-arm64
+   docker manifest push caiocf/postman-viewer:9.31.30
+
+   docker manifest create caiocf/postman-viewer:latest `
+     --amend caiocf/postman-viewer:latest-amd64 `
+     --amend caiocf/postman-viewer:latest-arm64
+   docker manifest push caiocf/postman-viewer:latest
    ```
 
 Uso da imagem do Docker Hub
