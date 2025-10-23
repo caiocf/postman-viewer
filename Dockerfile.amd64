@@ -1,0 +1,59 @@
+# syntax=docker/dockerfile:1
+
+FROM --platform=linux/amd64 debian:bookworm-slim
+
+ARG POSTMAN_VERSION=9.31.30
+ARG POSTMAN_PACKAGE=linux64
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=pt_BR.UTF-8 \
+    LANGUAGE=pt_BR:pt:en \
+    LC_ALL=pt_BR.UTF-8 \
+    DISPLAY=:0 \
+    RESOLUTION=1280x800x24 \
+    APP_USER=app \
+    APP_HOME=/home/app \
+    POSTMAN_BIN=/opt/Postman/Postman \
+    POSTMAN_CONFIG_DIR=/home/app/.config/Postman
+
+# Pacotes básicos + ambiente gráfico mínimo + dependências do Postman
+RUN apt-get update && apt-get install -y \
+    locales \
+    xvfb x11vnc websockify novnc \
+    openbox pcmanfm xterm \
+    ca-certificates curl tini \
+    libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 libasound2 libgbm1 libgdk-pixbuf2.0-0 \
+    libdrm2 libxshmfence1 libgl1 libglu1-mesa dbus-x11 \
+ && sed -i 's/# pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/' /etc/locale.gen \
+ && locale-gen \
+ && useradd -m -s /bin/bash ${APP_USER} \
+ && mkdir -p ${APP_HOME}/data ${POSTMAN_CONFIG_DIR} \
+ && if [ "${POSTMAN_VERSION}" = "latest" ]; then \
+       curl -fsSL "https://dl.pstmn.io/download/latest/${POSTMAN_PACKAGE}" -o /tmp/postman.tar.gz; \
+    else \
+       curl -fsSL "https://dl.pstmn.io/download/version/${POSTMAN_VERSION}/${POSTMAN_PACKAGE}" -o /tmp/postman.tar.gz; \
+    fi \
+ && tar -xzf /tmp/postman.tar.gz -C /opt \
+ && ln -sf /opt/Postman/Postman /usr/local/bin/postman \
+ && chown -R ${APP_USER}:${APP_USER} ${APP_HOME} /opt/Postman \
+ && rm /tmp/postman.tar.gz \
+ && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# script de entrada
+COPY --chown=app:app start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+USER ${APP_USER}
+WORKDIR ${APP_HOME}
+
+# Porta web do noVNC
+EXPOSE 8080
+
+# Healthcheck simples
+HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
+  CMD curl -fsS http://localhost:8080/ || exit 1
+
+ENV ELECTRON_OZONE_PLATFORM_HINT=x11
+
+ENTRYPOINT ["/usr/bin/tini","--"]
+CMD ["/usr/local/bin/start.sh"]
