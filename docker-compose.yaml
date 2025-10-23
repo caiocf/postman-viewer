@@ -1,6 +1,7 @@
 # docker-compose.yml
 services:
   postman-viewer:
+    platform: linux/amd64
     #build:
     #  context: .
     image: caiocf/postman-viewer:9.31.30
@@ -11,11 +12,11 @@ services:
       - NOVNC_PORT=8080
     ports:
       - "8080:8080"
-    volumes:
-      - type: bind
-        source: "$HOME/Library/Application Support/Postman/Partitions"
-        target: /home/app/.config/Postman/Partitions
-        read_only: true  # descomente se quiser evitar alteracoes no host
+    #volumes:
+    #  - type: bind
+    #    source: "$HOME/Library/Application Support/Postman/Partitions"
+    #    target: /home/app/.config/Postman/Partitions
+    #    read_only: true  # descomente se quiser evitar alteracoes no host
       
     # windows: substitua a origem por '${APPDATA}\\Postman\\Partitions'
     # macOS: substitua a origem por '$HOME/Library/Application Support/Postman/Partitions'

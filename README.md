@@ -12,6 +12,7 @@ Requisitos
 - Windows: diretório `%APPDATA%\Postman\Partitions` existente (ou exporte manualmente as coleções para importar depois).  
   - macOS: `~/Library/Application Support/Postman/Partitions`.  
   - Linux: `~/.config/Postman/Partitions`.  
+- macOS Apple Silicon (M1/M2): Docker Desktop com suporte a emulação `linux/amd64` habilitado (o compose já força essa arquitetura).
 
 Estrutura do projeto
 --------------------
