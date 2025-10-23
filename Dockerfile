@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     openbox pcmanfm xterm \
     ca-certificates curl tini \
     libgtk-3-0 libnotify4 libnss3 libxss1 libxtst6 libasound2 libgbm1 libgdk-pixbuf2.0-0 \
+    libdrm2 libxshmfence1 libgl1 libglu1-mesa dbus-x11 \
  && sed -i 's/# pt_BR.UTF-8 UTF-8/pt_BR.UTF-8 UTF-8/' /etc/locale.gen \
  && locale-gen \
  && useradd -m -s /bin/bash ${APP_USER} \
@@ -44,6 +45,8 @@ EXPOSE 8080
 # Healthcheck simples
 HEALTHCHECK --interval=30s --timeout=5s --retries=5 \
   CMD curl -fsS http://localhost:8080/ || exit 1
+
+ENV ELECTRON_OZONE_PLATFORM_HINT=x11
 
 ENTRYPOINT ["/usr/bin/tini","--"]
 CMD ["/usr/local/bin/start.sh"]

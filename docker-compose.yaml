@@ -4,7 +4,7 @@ services:
     platform: linux/amd64
     #build:
     #  context: .
-    image: caiocf/postman-viewer:9.31.30
+    image: caiocf/postman-viewer:9.31.30_1
     container_name: postman-viewer
     restart: unless-stopped
     environment:

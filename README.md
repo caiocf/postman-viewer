@@ -17,8 +17,9 @@ Requisitos
 Estrutura do projeto
 --------------------
 
-- `Dockerfile`: instala dependências gráficas, baixa o Postman 9.31.30 e prepara o usuário `app`.
-- `start.sh`: sobe Xvfb, VNC/noVNC e lança o Postman apontando para `~/.config/Postman/Partitions`.
+- `Dockerfile`: instala dependências gráficas, bibliotecas adicionais (libdrm, mesa, dbus-x11), baixa o Postman 9.31.30 e prepara o usuário `app`.
+- `start.sh`: sobe Xvfb, inicia um daemon DBus de sessão, VNC/noVNC e lança o Postman apontando para `~/.config/Postman/Partitions`.
+- O script já liga o Postman com flags `--disable-gpu --disable-dev-shm-usage --no-sandbox --disable-setuid-sandbox --disable-gpu-sandbox --disable-software-rasterizer --disable-features=VizDisplayCompositor --use-gl=swiftshader --in-process-gpu`; personalize via variável `POSTMAN_FLAGS` se necessário.
 - `docker-compose.yaml`: define o serviço, mapeia portas/volume e ajusta resolução do display virtual.
 
 Como subir localmente
@@ -93,5 +94,6 @@ Pontos de atenção
 - **Compatibilidade de dados:** partições de Postman 10+ não abrem na 9.31.30. Exporte/importe coleções se estiver migrando.
 - **Backup:** antes de montar `Partitions` no container, crie uma cópia de segurança.
 - **Log do Postman:** se a interface não abrir, verifique `/tmp/postman.log` dentro do container (`docker exec -it postman-viewer tail -f /tmp/postman.log`).
-- **Desempenho:** o Postman roda com aceleração de GPU desabilitada; em hardware limitado, pode haver latência na interface via noVNC.
+- **Desempenho:** o Postman roda com aceleração de GPU desabilitada (flags padrão em `start.sh`); em hardware limitado ou sob emulação ARM, pode haver latência na interface via noVNC.
+- **DBus/Logs:** o script inicia um DBus de sessão para evitar “Failed to connect to the bus”. Se ainda vir mensagens `gpu_process_host`, abra `/tmp/postman.log` para validar se as flags foram aplicadas e ajuste `POSTMAN_FLAGS`.
 - **Segurança:** noVNC não usa HTTPS nem autenticação por padrão. Restrinja o acesso à porta 8080 (VPN, firewall, etc.) ao publicar em ambientes públicos.

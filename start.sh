@@ -10,11 +10,22 @@ set -euo pipefail
 : "${POSTMAN_DATA_DIR:=$HOME/data}"
 : "${VNC_PORT:=5900}"
 : "${NOVNC_PORT:=8080}"
+: "${POSTMAN_FLAGS:=--disable-gpu --disable-dev-shm-usage --no-sandbox --disable-setuid-sandbox --disable-gpu-sandbox --disable-software-rasterizer --disable-features=VizDisplayCompositor --use-gl=swiftshader --in-process-gpu}"
 
 # garante estrutura de dados e link simbolico quando o volume eh montado em $HOME/data
 mkdir -p "${POSTMAN_CONFIG_DIR}" "${POSTMAN_DATA_DIR}"
 if [ -d "${POSTMAN_DATA_DIR}" ] && [ ! -e "${POSTMAN_PARTITIONS_DIR}" ]; then
   ln -s "${POSTMAN_DATA_DIR}" "${POSTMAN_PARTITIONS_DIR}"
+fi
+
+# inicia dbus de sessao para evitar falhas do Electron
+if command -v dbus-daemon >/dev/null 2>&1; then
+  DBUS_ADDRESS_FILE=$(mktemp)
+  if dbus-daemon --session --fork --print-address > "${DBUS_ADDRESS_FILE}"; then
+    DBUS_SESSION_BUS_ADDRESS=$(cat "${DBUS_ADDRESS_FILE}")
+    export DBUS_SESSION_BUS_ADDRESS
+  fi
+  rm -f "${DBUS_ADDRESS_FILE}"
 fi
 
 # inicia X virtual
@@ -30,7 +41,8 @@ x11vnc -display "${DISPLAY}" -rfbport "${VNC_PORT}" -forever -shared -nopw -quie
 
 # inicia Postman apontando para o DISPLAY atual
 if [ -x "${POSTMAN_BIN}" ]; then
-  "${POSTMAN_BIN}" --disable-gpu >/tmp/postman.log 2>&1 &
+  # Flags padrao reduzem dependencia de GPU/sandbox, util em ambientes ARM com emulacao
+  "${POSTMAN_BIN}" ${POSTMAN_FLAGS} >/tmp/postman.log 2>&1 &
 else
   echo "Postman nao encontrado em ${POSTMAN_BIN}" >&2
 fi
