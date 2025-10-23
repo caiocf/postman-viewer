@@ -81,6 +81,11 @@ docker run -d `
   docker stop postman-viewer && docker rm postman-viewer
   ```
 
+      
+    # windows: substitua a origem por '${APPDATA}\\Postman\\Partitions'
+    # macOS: substitua a origem por '$HOME/Library/Application Support/Postman/Partitions'
+    # Linux: substitua por '$HOME/.config/Postman/Partitions'
+
 Pontos de atenção
 -----------------
 
