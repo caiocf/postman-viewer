@@ -105,7 +105,7 @@ Usando ferramenta:
 
 ---
 
-## 🐳 Uso da Imagem do Docker Hub
+## 🐳 Uso da Imagem do Docker Hub ou Via Docker Compose
 
 Execute o container diretamente:
 
@@ -114,8 +114,29 @@ docker run -d `
   --name postman-viewer `
   -p 8080:8080 `
   -e RESOLUTION=1920x1080x24 `
-  -v "${ENV:APPDATA}\Postman\Partitions:/home/app/.config/Postman/Partitions" `
+  -v "${APPDATA}\\Postman\\Partitions:/home/app/.config/Postman/Partitions" `
   caiocf/postman-viewer:9.31.30_3
+```
+
+```powershell
+services:
+  postman-viewer:
+    platform: linux/amd64
+    #platform: linux/arm64
+    image: caiocf/postman-viewer:9.31.30_3
+    container_name: postman-viewer
+    restart: unless-stopped
+    environment:
+      - RESOLUTION=1920x1080x24
+      - NOVNC_PORT=8080
+    ports:
+      - "8080:8080"
+    #volumes:
+    #  - type: bind
+    #    #source: "$HOME/Library/Application Support/Postman/Partitions"
+    #    source: "${APPDATA}\\Postman\\Partitions"
+    #    target: /home/app/.config/Postman/Partitions
+    #    read_only: true  # descomente se quiser evitar alteracoes no host
 ```
 
 > 💡 Para testar sem persistência, remova a opção `-v`.
