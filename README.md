@@ -64,8 +64,6 @@ Você pode sobrescrever essas opções via variável de ambiente `POSTMAN_FLAGS`
 4. Acesse no navegador:
    👉 [http://localhost:8080](http://localhost:8080)
 
-
-
 >> Se o botão **"Skip and take me to Postman"** não aparecer, reduza o zoom (`Ctrl + -`) ou aumente a resolução.
 
 ![abertura_postman.png](assets/abertura_postman.png)
