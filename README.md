@@ -67,10 +67,10 @@ Você pode sobrescrever essas opções via variável de ambiente `POSTMAN_FLAGS`
 
 
 >> Se o botão **"Skip and take me to Postman"** não aparecer, reduza o zoom (`Ctrl + -`) ou aumente a resolução.
-![abertura_postman.png](assets%2Fabertura_postman.png)
+![abertura_postman.png](assets/abertura_postman.png)
 
 Usando ferramenta:
-![vnc_postman.png](assets%2Fvnc_postman.png)
+![vnc_postman.png](assets/vnc_postman.png)
 
 5. Para parar o serviço:
 
