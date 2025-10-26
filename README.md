@@ -65,6 +65,7 @@ Você pode sobrescrever essas opções via variável de ambiente `POSTMAN_FLAGS`
    👉 [http://localhost:8080](http://localhost:8080)
 
    > Se o botão **"Skip and take me to Postman"** não aparecer, reduza o zoom (`Ctrl + -`) ou aumente a resolução.
+   
 
 5. Para parar o serviço:
 
@@ -88,9 +89,7 @@ Você pode sobrescrever essas opções via variável de ambiente `POSTMAN_FLAGS`
    docker buildx inspect --bootstrap
    docker run --privileged --rm tonistiigi/binfmt --install all
 
-   docker buildx build --platform linux/amd64,linux/arm64 `
-     -t caiocf/postman-viewer:9.31.30_3 `
-     --push .
+   docker buildx build --platform linux/amd64,linux/arm64   -t caiocf/postman-viewer:9.31.30_3  --push .
    ```
 
 3. (Opcional) Limpeza de cache e camadas antigas:
