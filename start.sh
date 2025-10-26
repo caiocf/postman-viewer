@@ -4,7 +4,7 @@ set -euo pipefail
 # valores padrao (pode sobrescrever com env vars)
 : "${DISPLAY:=:0}"
 : "${RESOLUTION:=1280x800x24}"
-: "${POSTMAN_BIN:=/opt/Postman/Postman}"
+: "${POSTMAN_BIN:=/usr/local/bin/postman}"
 : "${POSTMAN_CONFIG_DIR:=$HOME/.config/Postman}"
 : "${POSTMAN_PARTITIONS_DIR:=${POSTMAN_CONFIG_DIR}/Partitions}"
 : "${POSTMAN_DATA_DIR:=$HOME/data}"
@@ -14,9 +14,9 @@ set -euo pipefail
 
 # garante estrutura de dados e link simbolico quando o volume eh montado em $HOME/data
 mkdir -p "${POSTMAN_CONFIG_DIR}" "${POSTMAN_DATA_DIR}"
-if [ -d "${POSTMAN_DATA_DIR}" ] && [ ! -e "${POSTMAN_PARTITIONS_DIR}" ]; then
-  ln -s "${POSTMAN_DATA_DIR}" "${POSTMAN_PARTITIONS_DIR}"
-fi
+#if [ -d "${POSTMAN_DATA_DIR}" ] && [ ! -e "${POSTMAN_PARTITIONS_DIR}" ]; then
+#  ln -s "${POSTMAN_DATA_DIR}" "${POSTMAN_PARTITIONS_DIR}"
+#fi
 
 # inicia dbus de sessao para evitar falhas do Electron
 if command -v dbus-daemon >/dev/null 2>&1; then
@@ -34,7 +34,8 @@ sleep 0.5
 
 # inicia gerenciador de janelas + explorador de arquivos
 openbox &
-pcmanfm "${POSTMAN_PARTITIONS_DIR}" &
+pcmanfm &
+# pcmanfm "${POSTMAN_PARTITIONS_DIR}" &
 
 # inicia servidor VNC ligado no Xvfb
 x11vnc -display "${DISPLAY}" -rfbport "${VNC_PORT}" -forever -shared -nopw -quiet &

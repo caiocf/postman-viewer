@@ -1,91 +1,110 @@
-Postman GUI via Docker com Persistência (versão 9.31.30)
-=======================================================
+# Postman GUI via Docker com Persistência
 
-Este projeto entrega o Postman GUI rodando em um container Debian minimalista, acessível via navegador (noVNC). A imagem instala a versão 9.31.30, que ainda permite utilizar o aplicativo sem login obrigatório. As coleções e ambientes são preservados mapeando o diretório `Partitions` do Postman do host para o container.
+Este projeto entrega o **Postman GUI** rodando dentro de um container Debian minimalista, acessível via navegador usando **noVNC**.  
+A imagem instala a versão **9.31.30** — a última versão que ainda permite o uso **sem login obrigatório**.  
+As coleções e ambientes são preservados mapeando o diretório `Partitions` do Postman do host para o container.
 
-> **Importante:** a versão 9.31.30 não abre partições criadas por versões mais novas (Postman 10+). Se seus dados são de uma versão mais recente, exporte suas coleções como JSON usando um Postman compatível antes de migrar para esta imagem. Sempre faça backup da pasta `Partitions` antes de experimentar.
+> ⚠️ **Importante:** a versão 9.31.30 **não abre partições criadas em versões mais novas** (Postman 10+).  
+> Exporte suas coleções como JSON em uma versão compatível antes de migrar e **faça backup da pasta `Partitions`**.
 
-Requisitos
-----------
+---
 
-- Docker 20.10+ e Docker Compose Plugin.
-- Windows: diretório `%APPDATA%\Postman\Partitions` existente (ou exporte manualmente as coleções para importar depois).  
-  - macOS: `~/Library/Application Support/Postman/Partitions`.  
-  - Linux: `~/.config/Postman/Partitions`.  
-- macOS Apple Silicon (M1/M2): Docker Desktop com suporte a emulação `linux/amd64` habilitado (o compose já força essa arquitetura).
+## 🧩 Requisitos
 
-Estrutura do projeto
---------------------
+- Docker 20.10+ e plugin Docker Compose
+- Diretório `Partitions` do Postman existente:
+  - **Windows:** `%APPDATA%\Postman\Partitions`
+  - **macOS:** `~/Library/Application Support/Postman/Partitions`
+  - **Linux:** `~/.config/Postman/Partitions`
+- **Apple Silicon (M1/M2):** Docker Desktop com suporte à emulação `linux/amd64` habilitado (já configurado no Compose).
 
-- `Dockerfile.amd64`: instala dependências gráficas, bibliotecas adicionais (libdrm, mesa, dbus-x11), baixa o Postman 9.31.30 (pacote `linux64`) e prepara o usuário `app` para hosts x86_64.
-- `Dockerfile.arm64`: equivalente para hosts ARM64, baixando o pacote `linux-arm64` (por padrão a versão `latest`, que exige login no Postman 10+).
-- `start.sh`: sobe Xvfb, inicia um daemon DBus de sessão, VNC/noVNC e lança o Postman apontando para `~/.config/Postman/Partitions`.
-- O script já liga o Postman com flags `--disable-gpu --disable-dev-shm-usage --no-sandbox --disable-setuid-sandbox --disable-gpu-sandbox --disable-software-rasterizer --disable-features=VizDisplayCompositor --use-gl=swiftshader --in-process-gpu`; personalize via variável `POSTMAN_FLAGS` se necessário.
-- `docker-compose.yaml`: define o serviço, mapeia portas/volume e ajusta resolução do display virtual.
+---
 
-Arquiteturas suportadas
------------------------
+## 📁 Estrutura do Projeto
 
-- **x86_64 (amd64):** utilize o `Dockerfile.amd64`, que preserva a versão 9.31.30 (sem login obrigatório) baixando o pacote `linux64`.
-- **ARM64 (aarch64/Apple Silicon):** utilize o `Dockerfile.arm64`, que baixa o pacote `linux-arm64`. A Postman mantém apenas versões 10+ para ARM, portanto será necessário autenticar-se ao abrir o aplicativo.
+- **`Dockerfile`** – instala dependências gráficas, bibliotecas essenciais (libdrm, mesa, dbus-x11) e baixa o Postman 9.31.30 (pacote `linux64`).
+- **`start.sh`** – inicia o servidor Xvfb, um daemon DBus de sessão, VNC/noVNC e o Postman apontando para `~/.config/Postman/Partitions`.
+- **`docker-compose.yaml`** – define o serviço, portas, volume e a resolução da tela virtual via variável `RESOLUTION`.
 
-Como subir localmente
----------------------
+O Postman é iniciado com as flags:
+```
 
-1. Ajuste o caminho do volume no `docker-compose.yaml` conforme seu sistema operacional (Windows já está configurado).  
+--disable-gpu --disable-dev-shm-usage --no-sandbox --disable-setuid-sandbox 
+--disable-gpu-sandbox --disable-software-rasterizer --disable-features=VizDisplayCompositor 
+--use-gl=swiftshader --in-process-gpu
+
+````
+Você pode sobrescrever essas opções via variável de ambiente `POSTMAN_FLAGS`.
+
+---
+
+## 🚀 Como Subir Localmente
+
+1. (Opcional) Ajuste o caminho do volume no `docker-compose.yaml` conforme seu sistema:
    ```yaml
    volumes:
      - type: bind
-       source: "${APPDATA}\\Postman\\Partitions"   # ajuste para macOS/Linux conforme comentários
+       source: "${APPDATA}\\Postman\\Partitions"   # macOS: ~/Library/... | Linux: ~/.config/...
        target: /home/app/.config/Postman/Partitions
+   ````
+
+2. (Opcional) Ajuste a variável `RESOLUTION`:
+
+   ```yaml
+   environment:
+     RESOLUTION: 1920x1080x24
    ```
-2. (Opcional) Ajuste a variável `RESOLUTION` para aumentar a área útil do Postman, por exemplo `1920x1080x24`.
-3. Construa e suba o container (em hosts ARM64 exporte `POSTMAN_DOCKERFILE=Dockerfile.arm64` e `POSTMAN_PLATFORM=linux/arm64` antes do comando):
+
+3. Construa e suba o container:
+
    ```powershell
-   docker compose up --build -d
+   docker compose up -d
    ```
-4. Abra `http://localhost:8080` no navegador. O botão “Skip and take me to Postman” só aparece com a resolução suficiente; use as teclas `Ctrl` + `-` ou aumente `RESOLUTION` se necessário.
-5. Para parar:
+
+4. Acesse no navegador:
+   👉 [http://localhost:8080](http://localhost:8080)
+
+   > Se o botão **"Skip and take me to Postman"** não aparecer, reduza o zoom (`Ctrl + -`) ou aumente a resolução.
+
+5. Para parar o serviço:
+
    ```powershell
    docker compose down
    ```
 
-Publicação no Docker Hub
-------------------------
+---
 
-1. Faça login:
-   ```powershell
-   docker login -u caiocf
-   ```
-2. Construa e publique a variante **amd64**:
-   ```powershell
-   docker build -f Dockerfile.amd64 -t caiocf/postman-viewer:9.31.30-amd64 .
-   docker push caiocf/postman-viewer:9.31.30-amd64
-   docker tag  caiocf/postman-viewer:9.31.30-amd64 caiocf/postman-viewer:latest-amd64
-   docker push caiocf/postman-viewer:latest-amd64
-   ```
-3. Construa e publique a variante **arm64** (execute em um host ARM ou habilite `buildx` com emulação QEMU):
-   ```powershell
-   docker build -f Dockerfile.arm64 -t caiocf/postman-viewer:9.31.30-arm64 .
-   docker push caiocf/postman-viewer:9.31.30-arm64
-   docker tag  caiocf/postman-viewer:9.31.30-arm64 caiocf/postman-viewer:latest-arm64
-   docker push caiocf/postman-viewer:latest-arm64
-   ```
-4. (Opcional) Gere um manifest multi-arquitetura para facilitar o `docker pull` automático:
-   ```powershell
-   docker manifest create caiocf/postman-viewer:9.31.30 `
-     --amend caiocf/postman-viewer:9.31.30-amd64 `
-     --amend caiocf/postman-viewer:9.31.30-arm64
-   docker manifest push caiocf/postman-viewer:9.31.30
+## 📦 Publicação no Docker Hub
 
-   docker manifest create caiocf/postman-viewer:latest `
-     --amend caiocf/postman-viewer:latest-amd64 `
-     --amend caiocf/postman-viewer:latest-arm64
-   docker manifest push caiocf/postman-viewer:latest
+1. Login:
+
+   ```powershell
+   docker login 
    ```
 
-Uso da imagem do Docker Hub
----------------------------
+2. Build e push multi-arquitetura:
+
+   ```powershell
+   docker buildx inspect --bootstrap
+   docker run --privileged --rm tonistiigi/binfmt --install all
+
+   docker buildx build --platform linux/amd64,linux/arm64 `
+     -t caiocf/postman-viewer:9.31.30_3 `
+     --push .
+   ```
+
+3. (Opcional) Limpeza de cache e camadas antigas:
+
+   ```powershell
+   docker buildx prune -af
+   docker rmi caiocf/postman-viewer:9.31.30_3
+   ```
+
+---
+
+## 🐳 Uso da Imagem do Docker Hub
+
+Execute o container diretamente:
 
 ```powershell
 docker run -d `
@@ -93,27 +112,40 @@ docker run -d `
   -p 8080:8080 `
   -e RESOLUTION=1920x1080x24 `
   -v "${ENV:APPDATA}\Postman\Partitions:/home/app/.config/Postman/Partitions" `
-  caiocf/postman-viewer:9.31.30
+  caiocf/postman-viewer:9.31.30_3
 ```
 
-- Para macOS/Linux, substitua o volume conforme caminho indicado no topo.
-- Se quiser apenas testar sem persistência, remova a opção `-v`.
-- Desligar:
-  ```powershell
-  docker stop postman-viewer && docker rm postman-viewer
+> 💡 Para testar sem persistência, remova a opção `-v`.
+> 🔒 O noVNC não usa HTTPS ou autenticação por padrão — limite o acesso à porta 8080 se for expor publicamente.
+
+---
+
+## ⚙️ Pontos de Atenção
+
+* **Compatibilidade de dados:** partições de Postman 10+ não abrem na versão 9.31.30.
+* **Backup:** sempre crie uma cópia da pasta `Partitions` antes de montar no container.
+* **Logs:** se a interface não abrir, verifique:
+
+  ```bash
+  docker exec -it postman-viewer tail -f /tmp/postman.log
   ```
+* **Desempenho:** aceleração de GPU está desativada por padrão; em hosts ARM pode haver pequena latência.
+* **DBus:** o script inicia um DBus de sessão para evitar erros de comunicação.
+* **Segurança:** configure firewall/VPN se publicar em rede externa.
 
-      
-    # windows: substitua a origem por '${APPDATA}\\Postman\\Partitions'
-    # macOS: substitua a origem por '$HOME/Library/Application Support/Postman/Partitions'
-    # Linux: substitua por '$HOME/.config/Postman/Partitions'
+---
 
-Pontos de atenção
------------------
+## 🧪 Teste Local da Imagem
 
-- **Compatibilidade de dados:** partições de Postman 10+ não abrem na 9.31.30. Exporte/importe coleções se estiver migrando.
-- **Backup:** antes de montar `Partitions` no container, crie uma cópia de segurança.
-- **Log do Postman:** se a interface não abrir, verifique `/tmp/postman.log` dentro do container (`docker exec -it postman-viewer tail -f /tmp/postman.log`).
-- **Desempenho:** o Postman roda com aceleração de GPU desabilitada (flags padrão em `start.sh`); em hardware limitado ou sob emulação ARM, pode haver latência na interface via noVNC.
-- **DBus/Logs:** o script inicia um DBus de sessão para evitar “Failed to connect to the bus”. Se ainda vir mensagens `gpu_process_host`, abra `/tmp/postman.log` para validar se as flags foram aplicadas e ajuste `POSTMAN_FLAGS`.
-- **Segurança:** noVNC não usa HTTPS nem autenticação por padrão. Restrinja o acesso à porta 8080 (VPN, firewall, etc.) ao publicar em ambientes públicos.
+```bash
+docker run --rm -it --platform linux/amd64 \
+  caiocf/postman-viewer:9.31.30_3 \
+  bash -lc 'dpkg --print-architecture; file /bin/bash'
+```
+
+---
+
+## 🏷️ Licença
+
+Distribuído sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+

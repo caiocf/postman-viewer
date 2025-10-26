@@ -1,11 +1,8 @@
-# docker-compose.yml
 services:
   postman-viewer:
-    #platform: ${POSTMAN_PLATFORM:-linux/amd64}
-    #build:
-    #  context: .
-    #  dockerfile: ${POSTMAN_DOCKERFILE:-Dockerfile.amd64}  # use Dockerfile.arm64 para hosts ARM
-    image: caiocf/postman-viewer:9.31.30_amd64
+    platform: linux/amd64
+    #platform: linux/arm64
+    image: caiocf/postman-viewer:9.31.30_3
     container_name: postman-viewer
     restart: unless-stopped
     environment:
@@ -15,7 +12,8 @@ services:
       - "8080:8080"
     #volumes:
     #  - type: bind
-    #    source: "$HOME/Library/Application Support/Postman/Partitions"
+    #    #source: "$HOME/Library/Application Support/Postman/Partitions"
+    #    source: "${APPDATA}\\Postman\\Partitions"
     #    target: /home/app/.config/Postman/Partitions
     #    read_only: true  # descomente se quiser evitar alteracoes no host
       
