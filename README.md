@@ -67,6 +67,7 @@ Você pode sobrescrever essas opções via variável de ambiente `POSTMAN_FLAGS`
 
 
 >> Se o botão **"Skip and take me to Postman"** não aparecer, reduza o zoom (`Ctrl + -`) ou aumente a resolução.
+
 ![abertura_postman.png](assets/abertura_postman.png)
 
 Usando ferramenta:
